@@ -19,13 +19,27 @@
 #include "timecontrol.h"
 #include <QStringList>
 #include <QSettings>
+#include <QtMath>
 
 namespace {
+
+QString s_secondsString(int ms)
+{
+	QString str = QString::number(ms / 1000);
+	int milliseconds = ms % 1000;
+	if (milliseconds == 0)
+		return str;
+
+	QString fraction = QString("%1").arg(milliseconds, 3, 10, QChar('0'));
+	while (fraction.endsWith('0'))
+		fraction.chop(1);
+	return str + "." + fraction;
+}
 
 QString s_timeString(int ms)
 {
 	if (ms == 0 || ms % 60000 != 0)
-		return TimeControl::tr("%1 sec").arg(double(ms) / 1000.0);
+		return TimeControl::tr("%1 sec").arg(s_secondsString(ms));
 	if (ms % 3600000 != 0)
 		return TimeControl::tr("%1 min").arg(ms / 60000);
 	return TimeControl::tr("%1 h").arg(ms / 3600000);
@@ -85,7 +99,7 @@ TimeControl::TimeControl(const QString& str)
 	// increment
 	if (list.size() == 2)
 	{
-		int inc = (int)(list.at(1).toDouble() * 1000);
+		int inc = qRound(list.at(1).toDouble() * 1000.0);
 		if (inc >= 0)
 			setTimeIncrement(inc);
 	}
@@ -115,9 +129,10 @@ TimeControl::TimeControl(const QString& str)
 	int ms = 0;
 	list = strTime.split(':');
 	if (list.size() == 2)
-		ms = (int)(list.at(0).toDouble() * 60000 + list.at(1).toDouble() * 1000);
+		ms = qRound(list.at(0).toDouble() * 60000.0
+			  + list.at(1).toDouble() * 1000.0);
 	else
-		ms = (int)(list.at(0).toDouble() * 1000);
+		ms = qRound(list.at(0).toDouble() * 1000.0);
 
 	if (ms > 0)
 		setTimePerTc(ms);
@@ -161,17 +176,17 @@ QString TimeControl::toString() const
 		return QString("inf");
 
 	if (m_timePerMove != 0)
-		return QString("%1/move").arg((double)m_timePerMove / 1000);
+		return QString("%1/move").arg(s_secondsString(m_timePerMove));
 
 	QString str;
 	if (m_hourglass)
 		str += "hg";
 	if (m_movesPerTc > 0)
 		str += QString::number(m_movesPerTc) + "/";
-	str += QString::number((double)m_timePerTc / 1000);
+	str += s_secondsString(m_timePerTc);
 
 	if (m_increment > 0)
-		str += QString("+") + QString::number((double)m_increment / 1000);
+		str += QString("+") + s_secondsString(m_increment);
 	return str;
 }
 

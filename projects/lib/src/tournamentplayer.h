@@ -36,6 +36,15 @@ class LIB_EXPORT TournamentPlayer
 				 const TimeControl& timeControl,
 				 const OpeningBook* book,
 				 int bookDepth);
+		/*!
+		 * Creates a new TournamentPlayer object with separate time
+		 * controls for games played with White and Black.
+		 */
+		TournamentPlayer(PlayerBuilder* builder,
+				 const TimeControl& whiteTimeControl,
+				 const TimeControl& blackTimeControl,
+				 const OpeningBook* book,
+				 int bookDepth);
 
 		/*! Returns the player's builder object. */
 		const PlayerBuilder* builder() const;
@@ -43,8 +52,13 @@ class LIB_EXPORT TournamentPlayer
 		QString name() const;
 		/*! Sets the player's name to \a name. */
 		void setName(const QString& name);
-		/*! Returns the player's time control. */
-		const TimeControl& timeControl() const;
+		/*!
+		 * Returns the player's time control for \a side.
+		 * NoSide returns the White time control for backwards compatibility.
+		 */
+		const TimeControl& timeControl(Chess::Side side = Chess::Side::NoSide) const;
+		/*! Returns a display string for the player's time controls. */
+		QString timeControlString() const;
 		/*! Returns the player's opening book. */
 		const OpeningBook* book() const;
 		/*! Returns the player's maximum book depth. */
@@ -121,7 +135,7 @@ class LIB_EXPORT TournamentPlayer
 
 	private:
 		PlayerBuilder* m_builder;
-		TimeControl m_timeControl;
+		TimeControl m_timeControl[2];
 		const OpeningBook* m_book;
 		int m_bookDepth;
 		int m_wins;

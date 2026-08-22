@@ -23,8 +23,17 @@ TournamentPlayer::TournamentPlayer(PlayerBuilder* builder,
 				   const TimeControl& timeControl,
 				   const OpeningBook* book,
 				   int bookDepth)
+	: TournamentPlayer(builder, timeControl, timeControl, book, bookDepth)
+{
+}
+
+TournamentPlayer::TournamentPlayer(PlayerBuilder* builder,
+				   const TimeControl& whiteTimeControl,
+				   const TimeControl& blackTimeControl,
+				   const OpeningBook* book,
+				   int bookDepth)
 	: m_builder(builder),
-	  m_timeControl(timeControl),
+	  m_timeControl{whiteTimeControl, blackTimeControl},
 	  m_book(book),
 	  m_bookDepth(bookDepth),
 	  m_wins(0),
@@ -55,9 +64,20 @@ void TournamentPlayer::setName(const QString& name)
 		m_builder->setName(name);
 }
 
-const TimeControl& TournamentPlayer::timeControl() const
+const TimeControl& TournamentPlayer::timeControl(Chess::Side side) const
 {
-	return m_timeControl;
+	if (side == Chess::Side::Black)
+		return m_timeControl[Chess::Side::Black];
+	return m_timeControl[Chess::Side::White];
+}
+
+QString TournamentPlayer::timeControlString() const
+{
+	const TimeControl& whiteTc = m_timeControl[Chess::Side::White];
+	const TimeControl& blackTc = m_timeControl[Chess::Side::Black];
+	if (whiteTc == blackTc)
+		return whiteTc.toString();
+	return whiteTc.toString() + " vs " + blackTc.toString();
 }
 
 const OpeningBook* TournamentPlayer::book() const

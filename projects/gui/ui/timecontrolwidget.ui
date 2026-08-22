@@ -124,16 +124,19 @@
           <string>Time limit for the chosen time control</string>
          </property>
          <property name="decimals">
-          <number>2</number>
+          <number>3</number>
          </property>
          <property name="minimum">
-          <double>0.010000000000000</double>
+          <double>0.001000000000000</double>
          </property>
          <property name="maximum">
           <double>10000.000000000000000</double>
          </property>
+         <property name="singleStep">
+          <double>0.001000000000000</double>
+         </property>
          <property name="value">
-          <double>0.010000000000000</double>
+          <double>0.001000000000000</double>
          </property>
         </widget>
        </item>
@@ -181,6 +184,12 @@
        </property>
        <property name="suffix">
         <string> sec</string>
+       </property>
+       <property name="decimals">
+        <number>3</number>
+       </property>
+       <property name="singleStep">
+        <double>0.001000000000000</double>
        </property>
       </widget>
      </item>

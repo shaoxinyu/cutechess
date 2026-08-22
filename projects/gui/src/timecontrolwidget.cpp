@@ -18,6 +18,7 @@
 
 #include "timecontrolwidget.h"
 #include "ui_timecontrolwidget.h"
+#include <QtMath>
 
 
 TimeControlWidget::TimeControlWidget(QWidget* parent)
@@ -236,11 +237,11 @@ int TimeControlWidget::timeToMs() const
 	switch (ui->m_timeUnitCombo->currentIndex())
 	{
 	case Seconds:
-		return ui->m_timeSpin->value() * 1000.0;
+		return qRound(ui->m_timeSpin->value() * 1000.0);
 	case Minutes:
-		return ui->m_timeSpin->value() * 60000.0;
+		return qRound(ui->m_timeSpin->value() * 60000.0);
 	case Hours:
-		return ui->m_timeSpin->value() * 3600000.0;
+		return qRound(ui->m_timeSpin->value() * 3600000.0);
 	default:
 		return 0;
 	}
@@ -278,7 +279,7 @@ TimeControl TimeControlWidget::timeControl() const
 	{
 		tc.setMovesPerTc(ui->m_movesSpin->value());
 		tc.setTimePerTc(timeToMs());
-		tc.setTimeIncrement(ui->m_incrementSpin->value() * 1000.0);
+		tc.setTimeIncrement(qRound(ui->m_incrementSpin->value() * 1000.0));
 	}
 	else if (ui->m_hourglassRadio->isChecked())
 	{

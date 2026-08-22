@@ -49,6 +49,7 @@ NewTournamentDialog::NewTournamentDialog(EngineManager* engineManager,
 {
 	Q_ASSERT(engineManager != nullptr);
 	ui->setupUi(this);
+	ui->m_gameSettings->enableSplitTimeControls(true);
 
 	m_srcEnginesModel = new EngineConfigurationModel(engineManager, this);
 	#if 0
@@ -361,7 +362,11 @@ Tournament* NewTournamentDialog::createTournament(GameManager* gameManager) cons
 	t->setReverseSides(ts->reversingSchedule());
 	t->setResultFormat(ts->resultFormat());
 
-	bool isHourglass = ui->m_gameSettings->timeControl().isHourglass();
+	const TimeControl defaultWhiteTc =
+		ui->m_gameSettings->timeControl(Chess::Side::White);
+	const TimeControl defaultBlackTc =
+		ui->m_gameSettings->timeControl(Chess::Side::Black);
+	const bool isHourglass = defaultWhiteTc.isHourglass();
 
 	const auto engines = m_addedEnginesManager->engines();
 	for (int i = 0; i < engines.count(); i++)
@@ -369,13 +374,21 @@ Tournament* NewTournamentDialog::createTournament(GameManager* gameManager) cons
 		EngineConfiguration config = engines.at(i);
 		ui->m_gameSettings->applyEngineConfiguration(&config);
 		TimeControl tc = m_timeControls.at(i);
-		// Hourglass mode must be the same for all players
-		tc.setHourglass(isHourglass);
+		TimeControl whiteTc = defaultWhiteTc;
+		TimeControl blackTc = defaultBlackTc;
+		if (tc.isValid())
+		{
+			// Hourglass mode must be the same for all players
+			tc.setHourglass(isHourglass);
+			if (tc.isValid())
+			{
+				whiteTc = tc;
+				blackTc = tc;
+			}
+		}
 
-		t->addPlayer(new EngineBuilder(config),
-			     tc.isValid() ? tc : ui->m_gameSettings->timeControl(),
-			     book,
-			     bookDepth);
+		t->addPlayer(new EngineBuilder(config), whiteTc, blackTc,
+			     book, bookDepth);
 	}
 
 	return t;

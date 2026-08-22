@@ -318,6 +318,15 @@ class LIB_EXPORT Tournament : public QObject
 			       const OpeningBook* book = nullptr,
 			       int bookDepth = 256);
 		/*!
+		 * Adds player \a builder with separate time controls for games
+		 * played with White and Black.
+		 */
+		void addPlayer(PlayerBuilder* builder,
+			       const TimeControl& whiteTimeControl,
+			       const TimeControl& blackTimeControl,
+			       const OpeningBook* book = nullptr,
+			       int bookDepth = 256);
+		/*!
 		 * Returns tournament results as a string.
 		 * The default implementation works for most tournament types.
 		 */
