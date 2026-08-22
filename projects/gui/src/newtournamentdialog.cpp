@@ -364,9 +364,14 @@ Tournament* NewTournamentDialog::createTournament(GameManager* gameManager) cons
 
 	const TimeControl defaultWhiteTc =
 		ui->m_gameSettings->timeControl(Chess::Side::White);
-	const TimeControl defaultBlackTc =
+	TimeControl defaultBlackTc =
 		ui->m_gameSettings->timeControl(Chess::Side::Black);
 	const bool isHourglass = defaultWhiteTc.isHourglass();
+	// Hourglass only works when both sides use it. Normalize settings from
+	// older versions, which may contain independently selected modes.
+	defaultBlackTc.setHourglass(isHourglass);
+	if (!defaultBlackTc.isValid())
+		defaultBlackTc = defaultWhiteTc;
 
 	const auto engines = m_addedEnginesManager->engines();
 	for (int i = 0; i < engines.count(); i++)

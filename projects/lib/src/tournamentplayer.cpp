@@ -64,6 +64,11 @@ void TournamentPlayer::setName(const QString& name)
 		m_builder->setName(name);
 }
 
+const TimeControl& TournamentPlayer::timeControl() const
+{
+	return timeControl(Chess::Side::White);
+}
+
 const TimeControl& TournamentPlayer::timeControl(Chess::Side side) const
 {
 	if (side == Chess::Side::Black)

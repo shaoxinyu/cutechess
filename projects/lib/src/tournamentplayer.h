@@ -52,11 +52,13 @@ class LIB_EXPORT TournamentPlayer
 		QString name() const;
 		/*! Sets the player's name to \a name. */
 		void setName(const QString& name);
+		/*! Returns the player's White time control. */
+		const TimeControl& timeControl() const;
 		/*!
 		 * Returns the player's time control for \a side.
-		 * NoSide returns the White time control for backwards compatibility.
+		 * NoSide returns the White time control.
 		 */
-		const TimeControl& timeControl(Chess::Side side = Chess::Side::NoSide) const;
+		const TimeControl& timeControl(Chess::Side side) const;
 		/*! Returns a display string for the player's time controls. */
 		QString timeControlString() const;
 		/*! Returns the player's opening book. */
