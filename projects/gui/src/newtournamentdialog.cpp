@@ -49,7 +49,6 @@ NewTournamentDialog::NewTournamentDialog(EngineManager* engineManager,
 {
 	Q_ASSERT(engineManager != nullptr);
 	ui->setupUi(this);
-	ui->m_gameSettings->enableSplitTimeControls(true);
 
 	m_srcEnginesModel = new EngineConfigurationModel(engineManager, this);
 	#if 0
@@ -74,6 +73,10 @@ NewTournamentDialog::NewTournamentDialog(EngineManager* engineManager,
 	{
 		configureEngine(ui->m_playersList->currentIndex());
 	});
+	connect(ui->m_timeControlBtn, &QToolButton::clicked,
+		this, &NewTournamentDialog::configureTimeControl);
+	connect(ui->m_gameSettings, &GameSettingsWidget::timeControlChanged,
+		this, &NewTournamentDialog::updateTimeControlLabel);
 	connect(ui->m_moveEngineUpBtn, &QToolButton::clicked, [=]()
 	{
 		moveEngine(-1);
@@ -287,11 +290,78 @@ void NewTournamentDialog::onPlayerSelectionChanged(const QItemSelection& selecte
 
 	bool enable = ui->m_playersList->selectionModel()->hasSelection();
 	ui->m_configureEngineBtn->setEnabled(enable);
+	ui->m_timeControlBtn->setEnabled(enable);
 	ui->m_removeEngineBtn->setEnabled(enable);
 
 	int i = ui->m_playersList->currentIndex().row();
 	ui->m_moveEngineUpBtn->setEnabled(enable && i > 0);
 	ui->m_moveEngineDownBtn->setEnabled(enable && i < m_addedEnginesManager->engineCount() - 1);
+	updateTimeControlLabel();
+}
+
+void NewTournamentDialog::configureTimeControl()
+{
+	const QList<QModelIndex> selected =
+		ui->m_playersList->selectionModel()->selectedRows();
+	if (selected.isEmpty())
+		return;
+
+	const int i = selected.first().row();
+	TimeControl tc = m_timeControls.at(i);
+	if (!tc.isValid())
+		tc = ui->m_gameSettings->timeControl();
+
+	TimeControlDialog dlg(tc, this);
+	QString name = m_addedEnginesManager->engines().at(i).name();
+	if (selected.count() > 1)
+		name.append(tr(" - %0 engines").arg(selected.count()));
+	dlg.setWindowTitle(tr("Time Control - %0").arg(name));
+
+	if (dlg.exec() == QDialog::Accepted)
+	{
+		for (const QModelIndex& index: selected)
+			m_timeControls[index.row()] = dlg.timeControl();
+		updateTimeControlLabel();
+	}
+}
+
+void NewTournamentDialog::updateTimeControlLabel()
+{
+	const QList<QModelIndex> selected =
+		ui->m_playersList->selectionModel()->selectedRows();
+	if (selected.isEmpty())
+	{
+		ui->m_timeControlLabel->setText(tr("Time control: select an engine"));
+		return;
+	}
+
+	const TimeControl defaultTc = ui->m_gameSettings->timeControl();
+	const int firstRow = selected.first().row();
+	const bool firstUsesDefault = !m_timeControls.at(firstRow).isValid();
+	const TimeControl firstTc = firstUsesDefault ? defaultTc : m_timeControls.at(firstRow);
+
+	for (const QModelIndex& index: selected)
+	{
+		const TimeControl storedTc = m_timeControls.at(index.row());
+		const TimeControl effectiveTc = storedTc.isValid() ? storedTc : defaultTc;
+		if (!(effectiveTc == firstTc))
+		{
+			ui->m_timeControlLabel->setText(tr("Time control: multiple values"));
+			return;
+		}
+	}
+
+	if (selected.count() == 1 && firstUsesDefault)
+	{
+		ui->m_timeControlLabel->setText(
+			tr("Time control: tournament default (%1)")
+			.arg(firstTc.toVerboseString()));
+	}
+	else
+	{
+		ui->m_timeControlLabel->setText(
+			tr("Time control: %1").arg(firstTc.toVerboseString()));
+	}
 }
 
 void NewTournamentDialog::onContextMenuRequest()
@@ -303,24 +373,8 @@ void NewTournamentDialog::onContextMenuRequest()
 	QMenu menu(ui->m_playersList);
 
 	auto editTimeControlAct = menu.addAction(tr("Edit Time Control"));
-	connect(editTimeControlAct, &QAction::triggered, this, [=]()
-	{
-		int i = selected.first().row();
-		TimeControl tc {m_timeControls.at(i)};
-		if (!tc.isValid())
-			tc = ui->m_gameSettings->timeControl();
-
-		auto dlg = new TimeControlDialog(tc, this);
-		QString name {m_addedEnginesManager->engines().at(i).name()};
-		if (selected.count() > 1)
-			name.append(tr(" - %0 engines").arg(selected.count()));
-		dlg->setWindowTitle(tr("Time Control - %0").arg(name));
-
-		if (dlg->exec() == QDialog::Accepted)
-			for (const QModelIndex& index: selected)
-				m_timeControls[index.row()] = dlg->timeControl();
-		delete dlg;
-	});
+	connect(editTimeControlAct, &QAction::triggered,
+		this, &NewTournamentDialog::configureTimeControl);
 
 	menu.exec(QCursor::pos());
 }
@@ -362,16 +416,8 @@ Tournament* NewTournamentDialog::createTournament(GameManager* gameManager) cons
 	t->setReverseSides(ts->reversingSchedule());
 	t->setResultFormat(ts->resultFormat());
 
-	const TimeControl defaultWhiteTc =
-		ui->m_gameSettings->timeControl(Chess::Side::White);
-	TimeControl defaultBlackTc =
-		ui->m_gameSettings->timeControl(Chess::Side::Black);
-	const bool isHourglass = defaultWhiteTc.isHourglass();
-	// Hourglass only works when both sides use it. Normalize settings from
-	// older versions, which may contain independently selected modes.
-	defaultBlackTc.setHourglass(isHourglass);
-	if (!defaultBlackTc.isValid())
-		defaultBlackTc = defaultWhiteTc;
+	const TimeControl defaultTc = ui->m_gameSettings->timeControl();
+	const bool isHourglass = defaultTc.isHourglass();
 
 	const auto engines = m_addedEnginesManager->engines();
 	for (int i = 0; i < engines.count(); i++)
@@ -379,21 +425,13 @@ Tournament* NewTournamentDialog::createTournament(GameManager* gameManager) cons
 		EngineConfiguration config = engines.at(i);
 		ui->m_gameSettings->applyEngineConfiguration(&config);
 		TimeControl tc = m_timeControls.at(i);
-		TimeControl whiteTc = defaultWhiteTc;
-		TimeControl blackTc = defaultBlackTc;
-		if (tc.isValid())
-		{
-			// Hourglass mode must be the same for all players
-			tc.setHourglass(isHourglass);
-			if (tc.isValid())
-			{
-				whiteTc = tc;
-				blackTc = tc;
-			}
-		}
+		// Hourglass mode must be the same for all players
+		tc.setHourglass(isHourglass);
 
-		t->addPlayer(new EngineBuilder(config), whiteTc, blackTc,
-			     book, bookDepth);
+		t->addPlayer(new EngineBuilder(config),
+			     tc.isValid() ? tc : defaultTc,
+			     book,
+			     bookDepth);
 	}
 
 	return t;

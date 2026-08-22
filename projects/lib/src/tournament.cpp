@@ -372,19 +372,9 @@ void Tournament::addPlayer(PlayerBuilder* builder,
 			   const OpeningBook* book,
 			   int bookDepth)
 {
-	addPlayer(builder, timeControl, timeControl, book, bookDepth);
-}
-
-void Tournament::addPlayer(PlayerBuilder* builder,
-			   const TimeControl& whiteTimeControl,
-			   const TimeControl& blackTimeControl,
-			   const OpeningBook* book,
-			   int bookDepth)
-{
 	Q_ASSERT(builder != nullptr);
 
-	TournamentPlayer player(builder, whiteTimeControl, blackTimeControl,
-				book, bookDepth);
+	TournamentPlayer player(builder, timeControl, book, bookDepth);
 	m_players.append(player);
 }
 
@@ -443,10 +433,8 @@ void Tournament::startGame(TournamentPair* pair)
 	connect(game, SIGNAL(finished(ChessGame*)),
 		this, SLOT(onGameFinished(ChessGame*)));
 
-	game->setTimeControl(white.timeControl(Chess::Side::White),
-			     Chess::Side::White);
-	game->setTimeControl(black.timeControl(Chess::Side::Black),
-			     Chess::Side::Black);
+	game->setTimeControl(white.timeControl(), Chess::Side::White);
+	game->setTimeControl(black.timeControl(), Chess::Side::Black);
 
 	game->setOpeningBook(white.book(), Chess::Side::White, white.bookDepth());
 	game->setOpeningBook(black.book(), Chess::Side::Black, black.bookDepth());
@@ -1031,7 +1019,7 @@ QString Tournament::results() const
 				     player.outcomes(Chess::Result::Adjudication),
 				     player.outcomes(Chess::Result::Agreement),
 				     player.outcomes(AuxResultType::OtherDraw),
-				     player.timeControlString() };
+				     player.timeControl().toString() };
 
 		// Order players like this:
 		// 1. Gauntlet player (if any)

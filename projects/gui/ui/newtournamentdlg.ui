@@ -255,6 +255,16 @@
            </layout>
           </item>
           <item>
+           <widget class="QLabel" name="m_timeControlLabel">
+            <property name="text">
+             <string>Time control: select an engine</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
            <layout class="QHBoxLayout" name="horizontalLayout_3">
             <item>
              <widget class="QToolButton" name="m_addEngineBtn">
@@ -304,6 +314,19 @@
               <property name="icon">
                <iconset resource="../res/icons/icons.qrc">
                 <normaloff>:/icons/toolbutton/configure_16x16.png</normaloff>:/icons/toolbutton/configure_16x16.png</iconset>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="m_timeControlBtn">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="text">
+               <string>Time Control...</string>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextOnly</enum>
               </property>
              </widget>
             </item>

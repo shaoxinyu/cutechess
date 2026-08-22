@@ -61,7 +61,6 @@ class tst_TournamentPlayer: public QObject
 
 	private slots:
 		void initialValues();
-		void splitTimeControls();
 		void setName();
 		void addScore();
 
@@ -96,7 +95,6 @@ void tst_TournamentPlayer::initialValues()
 	QCOMPARE(m_player->builder(), m_builder);
 	QCOMPARE(m_player->name(), QString("orig_name"));
 	QCOMPARE(m_player->timeControl(), m_tc);
-	QCOMPARE(m_player->timeControlString(), m_tc.toString());
 	QCOMPARE(m_player->wins(), 0);
 	QCOMPARE(m_player->draws(), 0);
 	QCOMPARE(m_player->losses(), 0);
@@ -107,24 +105,6 @@ void tst_TournamentPlayer::initialValues()
 	QCOMPARE(m_player->blackWins(), 0);
 	QCOMPARE(m_player->blackDraws(), 0);
 	QCOMPARE(m_player->blackLosses(), 0);
-}
-
-void tst_TournamentPlayer::splitTimeControls()
-{
-	TimeControl whiteTc;
-	whiteTc.setTimePerTc(1001);
-	whiteTc.setTimeIncrement(1);
-	TimeControl blackTc;
-	blackTc.setTimePerTc(2002);
-	blackTc.setTimeIncrement(2);
-	MockPlayerBuilder builder("split_time_controls");
-	TournamentPlayer player(&builder, whiteTc, blackTc, nullptr, 0);
-
-	QCOMPARE(player.timeControl(), whiteTc);
-	QCOMPARE(player.timeControl(Chess::Side::White), whiteTc);
-	QCOMPARE(player.timeControl(Chess::Side::Black), blackTc);
-	QCOMPARE(player.timeControlString(),
-		 QString("1.001+0.001 vs 2.002+0.002"));
 }
 
 void tst_TournamentPlayer::setName()

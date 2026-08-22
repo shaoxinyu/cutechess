@@ -50,6 +50,7 @@ class NewTournamentDialog : public QDialog
 		void addEngine();
 		void removeEngine();
 		void configureEngine(const QModelIndex& index);
+		void configureTimeControl();
 		void onVariantChanged(const QString& variant);
 		void onPlayerSelectionChanged(const QItemSelection& selected,
 					      const QItemSelection& deselected);
@@ -59,6 +60,7 @@ class NewTournamentDialog : public QDialog
 		void moveEngine(int offset);
 		bool canStart() const;
 		void readSettings();
+		void updateTimeControlLabel();
 
 		EngineManager* m_srcEngineManager;
 		EngineManager* m_addedEnginesManager;
